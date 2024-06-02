@@ -6,7 +6,9 @@ on:
       - opened
       - edited
       - synchronize
-  
+  issue_comment:
+    types:
+      - created
 
 jobs:
   check-comments-and-diff:
