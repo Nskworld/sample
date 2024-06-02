@@ -44,6 +44,7 @@ jobs:
             if [ "$MASK_NOT_NEEDED" -gt 0 ] || [ "$MASK_REGISTERED" -gt 0 ]; then
               echo "mask_complete=$MASK_COMPLETE" >> $GITHUB_ENV
             else
+              echo "どちらにもチェックがついていません"
               echo "mask_complete=0" >> $GITHUB_ENV
               exit 1
             fi
