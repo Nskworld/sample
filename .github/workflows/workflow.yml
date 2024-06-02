@@ -37,7 +37,14 @@ jobs:
         echo "comment_exists=$COMMENT_EXISTS" >> $GITHUB_ENV
 
         if [ "$COMMENT_EXISTS" == "true" ]; then
-          COMMENT_BODY=$(echo "$COMMENTS" | jq -r '.[] | select(.body | contains("項目が追加されました。")) | .body' | tail -n 1 | sed 's/\\r\\n/\n/g; s/\\n/\n/g')
+          # COMMENT_BODY=$(echo "$COMMENTS" | jq -r '.[] | select(.body | contains("項目が追加されました。")) | .body' | tail -n 1 | sed 's/\\r\\n/\n/g; s/\\n/\n/g')
+          FOUND_COMMENT=false
+          for comment in $(echo "$COMMENTS" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo "${comment}" | base64 --decode | jq -r "${1}"
+            }
+            COMMENT_BODY=$(_jq '.body')
+            echo "Checking comment body: $COMMENT_BODY"
           echo "Latest relevant comment body: $COMMENT_BODY"
           if [ -n "$COMMENT_BODY" ]; then
             MASK_NOT_NEEDED=$(echo "$COMMENT_BODY" | awk '/- \[x\] マスク不要/ {print "found"}' | wc -l)
