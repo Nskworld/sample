@@ -33,7 +33,6 @@ jobs:
         COMMENTS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $PR_URL)
         echo "$COMMENTS" > comments.json
         cat comments.json
-        COMMENT_BODIES=$(echo "$COMMENTS" | jq -r '.[].body')
         COMMENT_EXISTS=$(echo "$COMMENTS" | jq '. | length > 0')
         echo "comment_exists=$COMMENT_EXISTS" >> $GITHUB_ENV
 
@@ -42,9 +41,8 @@ jobs:
           echo "Latest relevant comment body: $COMMENT_BODY"
           if [ -n "$COMMENT_BODY" ]; then
             DONE=$(echo "$COMMENT_BODY" | awk '/- \[x\] マスク対象登録完了/ {print "found"}' | wc -l)
-            echo "MASK_NOT_NEEDED count: $MASK_NOT_NEEDED"
-            echo "MASK_REGISTERED count: $MASK_REGISTERED"
-            if [ "DONE" -gt 0 ]; then
+            echo "DONE status: $DONE"
+            if [ "$DONE" -gt 0 ]; then
               echo "mask_complete=1" >> $GITHUB_ENV
               echo "mask_complete is set to 1"
             else
