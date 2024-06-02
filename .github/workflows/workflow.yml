@@ -33,11 +33,12 @@ jobs:
         COMMENTS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $PR_URL)
         echo "$COMMENTS" > comments.json
         cat comments.json
+        COMMENT_BODIES=$(echo "$COMMENTS" | jq -r '.[].body')
         COMMENT_EXISTS=$(echo "$COMMENTS" | jq '. | length > 0')
         echo "comment_exists=$COMMENT_EXISTS" >> $GITHUB_ENV
 
         if [ "$COMMENT_EXISTS" == "true" ]; then
-          COMMENT_BODY=$(echo "$COMMENTS" | jq -r '.[] | select(.body | contains("項目が追加されました。")) | .body' | tail -n 1 | sed 's/\\r\\n/\n/g; s/\\n/\n/g')
+          COMMENT_BODY=$(echo "$COMMENT_BODIES")
           echo "Latest relevant comment body: $COMMENT_BODY"
           if [ -n "$COMMENT_BODY" ]; then
             MASK_NOT_NEEDED=$(echo "$COMMENT_BODY" | awk '/- \[x\] マスク不要/ {print "found"}' | wc -l)
