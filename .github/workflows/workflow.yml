@@ -42,8 +42,8 @@ jobs:
           if [ -n "$COMMENT_BODY" ]; then
             MASK_NOT_NEEDED=$(echo "$COMMENT_BODY" | grep -c "\- \[x\] マスク不要")
             MASK_REGISTERED=$(echo "$COMMENT_BODY" | grep -c "\- \[x\] マスク対象登録完了")
-            echo "MASK_NOT_NEEDED count: $MASK_NOT_NEEDED"
-            echo "MASK_REGISTERED count: $MASK_REGISTERED"
+            # echo "MASK_NOT_NEEDED count: $MASK_NOT_NEEDED"
+            # echo "MASK_REGISTERED count: $MASK_REGISTERED"
             echo "コメントがあります"
             # if [ "$MASK_NOT_NEEDED" -gt 0 ] || [ "$MASK_REGISTERED" -gt 0 ]; then
             #   echo "mask_complete=1" >> $GITHUB_ENV
