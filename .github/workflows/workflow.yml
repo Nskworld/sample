@@ -41,9 +41,9 @@ jobs:
           echo "mask_complete=0" >> $GITHUB_ENV
         fi
 
-    - name: Compare files if no comments
+    - name: Compare files if no comments or incomplete mask comments
       id: compare-no-comments
-      if: env.comment_exists == 'false'
+      if: env.comment_exists == 'false' || (env.comment_exists == 'true' && env.mask_complete == '0')
       run: |
         if ! diff sample_1.py sample_2.py > /dev/null; then
           echo "diff_exists=true" >> $GITHUB_ENV
@@ -51,33 +51,14 @@ jobs:
           echo "diff_exists=false" >> $GITHUB_ENV
         fi
 
-    - name: Comment and fail if diff exists and no comments
-      if: env.comment_exists == 'false' && env.diff_exists == 'true'
+    - name: Comment and fail if diff exists and no comments or incomplete mask comments
+      if: (env.comment_exists == 'false' || (env.comment_exists == 'true' && env.mask_complete == '0')) && env.diff_exists == 'true'
       run: |
         PR_NUMBER="${{ github.event.pull_request.number || github.event.issue.number }}"
         COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
         curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d '{"body": "マスク対応してください"}' $COMMENT_URL
         exit 1
 
-    - name: Check latest comment if comments exist
-      id: check-latest-comment
-      if: env.comment_exists == 'true'
-      run: |
-        COMMENTS=$(jq -r '.[].body' comments.json)
-        echo "Comments: $COMMENTS"
-        LATEST_COMMENT=$(echo "$COMMENTS" | tail -n 1)
-        if [ "$LATEST_COMMENT" == "マスク対応完了" ]; then
-          echo "latest_mask_complete=true" >> $GITHUB_ENV
-        else
-          echo "latest_mask_complete=false" >> $GITHUB_ENV
-        fi
-
-    - name: Compare files if latest comment is not "マスク対応完了"
-      if: env.comment_exists == 'true' && env.latest_mask_complete == 'false'
-      run: |
-        if ! diff sample_1.py sample_2.py > /dev/null; then
-          PR_NUMBER="${{ github.event.pull_request.number || github.event.issue.number }}"
-          COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
-          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d '{"body": "マスク対応してください"}' $COMMENT_URL
-          exit 1
-        fi
+    - name: Exit successfully if mask complete
+      if: env.mask_complete == '1'
+      run: exit 0
