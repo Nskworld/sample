@@ -6,7 +6,9 @@ on:
       - opened
       - edited
       - synchronize
-  
+  issue_comment:
+    types:
+      - created
 
 jobs:
   check-comments-and-diff:
@@ -27,7 +29,6 @@ jobs:
         PR_URL="https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/comments"
         COMMENTS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $PR_URL)
         echo "$COMMENTS" > comments.json
-        cat comments.json
         COMMENT_EXISTS=$(echo "$COMMENTS" | jq '. | length > 0')
         echo "comment_exists=$COMMENT_EXISTS" >> $GITHUB_ENV
         if [ "$COMMENT_EXISTS" == "true" ]; then
