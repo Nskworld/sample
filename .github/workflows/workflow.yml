@@ -46,20 +46,22 @@ jobs:
             echo "MASK_REGISTERED count: $MASK_REGISTERED"
             if [ "$MASK_NOT_NEEDED" -gt 0 ] || [ "$MASK_REGISTERED" -gt 0 ]; then
               echo "mask_complete=1" >> $GITHUB_ENV
+              echo "mask_complete=1"
             else
               echo "どちらにもチェックがついていません"
               echo "mask_complete=0" >> $GITHUB_ENV
+              echo "mask_complete=0"
               exit 1
             fi
           else
             echo "対象コメントが見つかりませんでした"
             echo "mask_complete=0" >> $GITHUB_ENV
+            echo "mask_complete=0"
           fi
         else
           echo "コメントが存在しません"
           echo "mask_complete=0" >> $GITHUB_ENV
-        
-        echo "mask_complete is set to: $mask_complete"
+          echo "mask_complete=0"
         fi
 
     - name: Compare files if no comments or incomplete mask comments
