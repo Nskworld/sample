@@ -71,3 +71,4 @@ jobs:
           COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/comments"
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d '{"body": "マスク対応してください"}' $COMMENT_URL
           exit 1
+        fi
