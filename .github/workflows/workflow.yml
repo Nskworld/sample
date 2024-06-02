@@ -34,12 +34,31 @@ jobs:
         cat comments.json
         COMMENT_EXISTS=$(echo "$COMMENTS" | jq '. | length > 0')
         echo "comment_exists=$COMMENT_EXISTS" >> $GITHUB_ENV
+
         if [ "$COMMENT_EXISTS" == "true" ]; then
-          MASK_COMPLETE=$(echo "$COMMENTS" | jq -r '.[].body' | grep -F "マスク対応完了" | wc -l)
-          echo "mask_complete=$MASK_COMPLETE" >> $GITHUB_ENV
+          COMMENT_BODY=$(echo "$COMMENTS" | jq -r '.[] | select(.body | contains("項目が追加されました。")) | .body' | tail -n 1)
+          if [ -n "$COMMENT_BODY" ]; then
+            MASK_NOT_NEEDED=$(echo "$COMMENT_BODY" | grep -c "\- \[x\] マスク不要")
+            MASK_REGISTERED=$(echo "$COMMENT_BODY" | grep -c "\- \[x\] マスク対象登録完了")
+            if [ "$MASK_NOT_NEEDED" -gt 0 ] || [ "$MASK_REGISTERED" -gt 0 ]; then
+              echo "mask_complete=$MASK_COMPLETE" >> $GITHUB_ENV
+            else
+              echo "mask_complete=0" >> $GITHUB_ENV
+              exit 1
+            fi
+          else
+            echo "mask_complete=0" >> $GITHUB_ENV
+          fi
         else
           echo "mask_complete=0" >> $GITHUB_ENV
         fi
+
+        # if [ "$COMMENT_EXISTS" == "true" ]; then
+        #   MASK_COMPLETE=$(echo "$COMMENTS" | jq -r '.[].body' | grep -F "マスク対応完了" | wc -l)
+        #   echo "mask_complete=$MASK_COMPLETE" >> $GITHUB_ENV
+        # else
+        #   echo "mask_complete=0" >> $GITHUB_ENV
+        # fi
 
     - name: Compare files if no comments or incomplete mask comments
       id: compare-no-comments
@@ -56,7 +75,7 @@ jobs:
       run: |
         PR_NUMBER="${{ github.event.pull_request.number || github.event.issue.number }}"
         COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
-        curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d '{"body": "- [ ] マスク不要\n- [ ] マスク対象登録完了"}' $COMMENT_URL
+        curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d '{"body": "項目が追加されました。\n- [ ] マスク不要\n- [ ] マスク対象登録完了"}' $COMMENT_URL
         exit 1
 
     - name: Exit successfully if mask complete
