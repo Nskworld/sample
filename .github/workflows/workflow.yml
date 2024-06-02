@@ -56,7 +56,7 @@ jobs:
       run: |
         PR_NUMBER="${{ github.event.pull_request.number || github.event.issue.number }}"
         COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
-        curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d '{"body": "マスク対応してください"}' $COMMENT_URL
+        curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d '{"body": "- [ ] マスク不要\n- [ ] マスク対象登録完了"}' $COMMENT_URL
         exit 1
 
     - name: Exit successfully if mask complete
