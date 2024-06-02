@@ -40,8 +40,8 @@ jobs:
           COMMENT_BODY=$(echo "$COMMENTS" | jq -r '.[] | select(.body | contains("項目が追加されました。")) | .body' | tail -n 1)
           echo "Latest relevant comment body: $COMMENT_BODY"
           if [ -n "$COMMENT_BODY" ]; then
-            MASK_NOT_NEEDED=$(echo "$COMMENT_BODY" | grep -c "\- \[x\] マスク不要")
-            MASK_REGISTERED=$(echo "$COMMENT_BODY" | grep -c "\- \[x\] マスク対象登録完了")
+            # MASK_NOT_NEEDED=$(echo "$COMMENT_BODY" | grep -c "\- \[x\] マスク不要")
+            # MASK_REGISTERED=$(echo "$COMMENT_BODY" | grep -c "\- \[x\] マスク対象登録完了")
             # echo "MASK_NOT_NEEDED count: $MASK_NOT_NEEDED"
             # echo "MASK_REGISTERED count: $MASK_REGISTERED"
             echo "コメントがあります"
