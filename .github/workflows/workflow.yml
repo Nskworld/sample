@@ -9,6 +9,8 @@ on:
   issue_comment:
     types:
       - created
+    types:
+      - edited
 
 jobs:
   check-comments-and-diff:
