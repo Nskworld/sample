@@ -44,7 +44,6 @@ jobs:
             MASK_REGISTERED=$(echo "$COMMENT_BODY" | awk '/- \[x\] マスク対象登録完了/ {print "found"}' | wc -l)
             echo "MASK_NOT_NEEDED count: $MASK_NOT_NEEDED"
             echo "MASK_REGISTERED count: $MASK_REGISTERED"
-            echo "コメントがあります"
             if [ "$MASK_NOT_NEEDED" -gt 0 ] || [ "$MASK_REGISTERED" -gt 0 ]; then
               echo "mask_complete=1" >> $GITHUB_ENV
               echo "mask_complete is set to 1"
@@ -58,7 +57,6 @@ jobs:
             echo "対象コメントが見つかりませんでした"
             echo "mask_complete=0" >> $GITHUB_ENV
             echo "mask_complete is set to 0"
-            echo "コメントがありません"
           fi
         else
           echo "コメントが存在しません"
