@@ -1,0 +1,71 @@
+name: PR Comment and Diff Check
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+
+jobs:
+  check-comments-and-diff:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Check for comments
+      id: check-comments
+      run: |
+        PR_URL="https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/comments"
+        COMMENTS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $PR_URL)
+        echo "$COMMENTS" > comments.json
+        COMMENT_EXISTS=$(echo "$COMMENTS" | jq '. | length > 0')
+        echo "::set-output name=comment_exists::$COMMENT_EXISTS"
+        if [ "$COMMENT_EXISTS" == "true" ]; then
+          MASK_COMPLETE=$(echo "$COMMENTS" | jq -r '.[].body' | grep -F "マスク対応完了" | wc -l)
+          echo "::set-output name=mask_complete::$MASK_COMPLETE"
+        else
+          echo "::set-output name=mask_complete::0"
+        fi
+
+    - name: Compare files if no comments
+      if: steps.check-comments.outputs.comment_exists == 'false'
+      run: |
+        if ! diff sample_1.py sample_2.py > /dev/null; then
+          echo "::set-output name=diff_exists::true"
+        else
+          echo "::set-output name=diff_exists::false"
+        fi
+
+    - name: Comment and fail if diff exists and no comments
+      if: steps.check-comments.outputs.comment_exists == 'false' && steps.check-comments.outputs.diff_exists == 'true'
+      run: |
+        COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/comments"
+        curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d '{"body": "マスク対応してください"}' $COMMENT_URL
+        exit 1
+
+    - name: Check latest comment if comments exist
+      if: steps.check-comments.outputs.comment_exists == 'true'
+      run: |
+        COMMENTS=$(jq -r '.[].body' comments.json)
+        LATEST_COMMENT=$(echo "$COMMENTS" | tail -n 1)
+        if [ "$LATEST_COMMENT" == "マスク対応完了" ]; then
+          echo "::set-output name=latest_mask_complete::true"
+        else
+          echo "::set-output name=latest_mask_complete::false"
+        fi
+
+    - name: Compare files if latest comment is not "マスク対応完了"
+      if: steps.check-comments.outputs.comment_exists == 'true' && steps.check-comments.outputs.latest_mask_complete == 'false'
+      run: |
+        if ! diff sample_1.py sample_2.py > /dev/null; then
+          COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/comments"
+          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d '{"body": "マスク対応してください"}' $COMMENT_URL
+          exit 1
