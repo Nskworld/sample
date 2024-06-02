@@ -37,14 +37,12 @@ jobs:
         echo "comment_exists=$COMMENT_EXISTS" >> $GITHUB_ENV
 
         if [ "$COMMENT_EXISTS" == "true" ]; then
-          COMMENT_BODY=$(echo "$COMMENTS" | jq -r '.[] | select(.body | contains("項目が追加されました。")) | .body' | tail -n 1)
+          COMMENT_BODY=$(echo "$COMMENTS" | jq -r '.[] | select(.body | contains("項目が追加されました。")) | .body' | tail -n 1 | sed 's/\\r\\n/\n/g; s/\\n/\n/g')
           echo "Latest relevant comment body: $COMMENT_BODY"
           if [ -n "$COMMENT_BODY" ]; then
-            MASK_NOT_NEEDED=$(echo "$COMMENT_BODY" | awk '/- \[x\] マスク不要/ {print "found"}' | wc -l)
-            MASK_REGISTERED=$(echo "$COMMENT_BODY" | awk '/- \[x\] マスク対象登録完了/ {print "found"}' | wc -l)
-            echo "MASK_NOT_NEEDED count: $MASK_NOT_NEEDED"
-            echo "MASK_REGISTERED count: $MASK_REGISTERED"
-            if [ "$MASK_NOT_NEEDED" -gt 0 ] || [ "$MASK_REGISTERED" -gt 0 ]; then
+            DONE=$(echo "$COMMENT_BODY" | grep -c '\- \[x\] 対応完了')
+            echo "DONE status: $DONE"
+            if [ "$DONE" -gt 0 ]; then
               echo "mask_complete=1" >> $GITHUB_ENV
               echo "mask_complete is set to 1"
             else
@@ -81,7 +79,7 @@ jobs:
         echo "Commenting and failing because comment_exists is ${{ env.comment_exists }}, mask_complete is ${{ env.mask_complete }}, and diff_exists is ${{ env.diff_exists }}"
         PR_NUMBER="${{ github.event.pull_request.number || github.event.issue.number }}"
         COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
-        curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d '{"body": "項目が追加されました。\n- [ ] マスク不要\n- [ ] マスク対象登録完了"}' $COMMENT_URL
+        curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d '{"body": "項目が追加されました。\n- [ ] 対応完了"}' $COMMENT_URL
         exit 1
 
     - name: Exit successfully if mask complete
