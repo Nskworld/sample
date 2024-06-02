@@ -58,19 +58,15 @@ jobs:
         else
           echo "コメントが存在しません"
           echo "mask_complete=0" >> $GITHUB_ENV
+        
+        echo "mask_complete is set to: $mask_complete"
         fi
-
-        # if [ "$COMMENT_EXISTS" == "true" ]; then
-        #   MASK_COMPLETE=$(echo "$COMMENTS" | jq -r '.[].body' | grep -F "マスク対応完了" | wc -l)
-        #   echo "mask_complete=$MASK_COMPLETE" >> $GITHUB_ENV
-        # else
-        #   echo "mask_complete=0" >> $GITHUB_ENV
-        # fi
 
     - name: Compare files if no comments or incomplete mask comments
       id: compare-no-comments
       if: env.comment_exists == 'false' || (env.comment_exists == 'true' && env.mask_complete == '0')
       run: |
+        echo "Comparing files because comment_exists is ${{ env.comment_exists }} and mask_complete is ${{ env.mask_complete }}"
         if ! diff sample_1.py sample_2.py > /dev/null; then
           echo "diff_exists=true" >> $GITHUB_ENV
         else
@@ -80,6 +76,7 @@ jobs:
     - name: Comment and fail if diff exists and no comments or incomplete mask comments
       if: (env.comment_exists == 'false' || (env.comment_exists == 'true' && env.mask_complete == 0)) && env.diff_exists == 'true'
       run: |
+        echo "Commenting and failing because comment_exists is ${{ env.comment_exists }}, mask_complete is ${{ env.mask_complete }}, and diff_exists is ${{ env.diff_exists }}"
         PR_NUMBER="${{ github.event.pull_request.number || github.event.issue.number }}"
         COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
         curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d '{"body": "項目が追加されました。\n- [ ] マスク不要\n- [ ] マスク対象登録完了"}' $COMMENT_URL
@@ -87,4 +84,7 @@ jobs:
 
     - name: Exit successfully if mask complete
       if: env.mask_complete == 1
-      run: exit 0
+      
+      run: |
+        echo "Exiting successfully because mask_complete is ${{ env.mask_complete }}"
+        exit 0
