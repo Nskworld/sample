@@ -45,7 +45,7 @@ jobs:
             echo "MASK_NOT_NEEDED count: $MASK_NOT_NEEDED"
             echo "MASK_REGISTERED count: $MASK_REGISTERED"
             if [ "$MASK_NOT_NEEDED" -gt 0 ] || [ "$MASK_REGISTERED" -gt 0 ]; then
-              echo "mask_complete=$MASK_COMPLETE" >> $GITHUB_ENV
+              echo "mask_complete=1" >> $GITHUB_ENV
             else
               echo "どちらにもチェックがついていません"
               echo "mask_complete=0" >> $GITHUB_ENV
@@ -86,5 +86,5 @@ jobs:
         exit 1
 
     - name: Exit successfully if mask complete
-      if: env.mask_complete == '1'
+      if: env.mask_complete == 1
       run: exit 0
