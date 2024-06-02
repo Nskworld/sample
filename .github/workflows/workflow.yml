@@ -40,28 +40,28 @@ jobs:
           COMMENT_BODY=$(echo "$COMMENTS" | jq -r '.[] | select(.body | contains("項目が追加されました。")) | .body' | tail -n 1)
           echo "Latest relevant comment body: $COMMENT_BODY"
           if [ -n "$COMMENT_BODY" ]; then
-            MASK_NOT_NEEDED=$(echo "$COMMENT_BODY" | grep -c "\- \[x\] マスク不要")
-            MASK_REGISTERED=$(echo "$COMMENT_BODY" | grep -c "\- \[x\] マスク対象登録完了")
+            MASK_NOT_NEEDED=$(echo "$COMMENT_BODY" | awk '/- \[x\] マスク不要/ {print "found"}' | wc -l)
+            MASK_REGISTERED=$(echo "$COMMENT_BODY" | awk '/- \[x\] マスク対象登録完了/ {print "found"}' | wc -l)
             echo "MASK_NOT_NEEDED count: $MASK_NOT_NEEDED"
             echo "MASK_REGISTERED count: $MASK_REGISTERED"
             if [ "$MASK_NOT_NEEDED" -gt 0 ] || [ "$MASK_REGISTERED" -gt 0 ]; then
               echo "mask_complete=1" >> $GITHUB_ENV
-              echo "mask_complete=1"
+              echo "mask_complete is set to 1"
             else
               echo "どちらにもチェックがついていません"
               echo "mask_complete=0" >> $GITHUB_ENV
-              echo "mask_complete=0"
+              echo "mask_complete is set to 0"
               exit 1
             fi
           else
             echo "対象コメントが見つかりませんでした"
             echo "mask_complete=0" >> $GITHUB_ENV
-            echo "mask_complete=0"
+            echo "mask_complete is set to 0"
           fi
         else
           echo "コメントが存在しません"
           echo "mask_complete=0" >> $GITHUB_ENV
-          echo "mask_complete=0"
+          echo "mask_complete is set to 0"
         fi
 
     - name: Compare files if no comments or incomplete mask comments
