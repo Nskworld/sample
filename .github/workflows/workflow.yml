@@ -12,6 +12,7 @@ on:
 
 jobs:
   check-comments-and-diff:
+    if: github.event.pull_request != null || github.event.issue.pull_request != null
     runs-on: ubuntu-latest
 
     steps:
@@ -26,7 +27,8 @@ jobs:
     - name: Check for comments
       id: check-comments
       run: |
-        PR_URL="https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/comments"
+        PR_NUMBER="${{ github.event.pull_request.number || github.event.issue.number }}"
+        PR_URL="https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
         COMMENTS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $PR_URL)
         echo "$COMMENTS" > comments.json
         cat comments.json
@@ -52,7 +54,8 @@ jobs:
     - name: Comment and fail if diff exists and no comments
       if: env.comment_exists == 'false' && env.diff_exists == 'true'
       run: |
-        COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/comments"
+        PR_NUMBER="${{ github.event.pull_request.number || github.event.issue.number }}"
+        COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
         curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d '{"body": "マスク対応してください"}' $COMMENT_URL
         exit 1
 
@@ -61,6 +64,7 @@ jobs:
       if: env.comment_exists == 'true'
       run: |
         COMMENTS=$(jq -r '.[].body' comments.json)
+        echo "Comments: $COMMENTS"
         LATEST_COMMENT=$(echo "$COMMENTS" | tail -n 1)
         if [ "$LATEST_COMMENT" == "マスク対応完了" ]; then
           echo "latest_mask_complete=true" >> $GITHUB_ENV
@@ -72,7 +76,8 @@ jobs:
       if: env.comment_exists == 'true' && env.latest_mask_complete == 'false'
       run: |
         if ! diff sample_1.py sample_2.py > /dev/null; then
-          COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/comments"
+          PR_NUMBER="${{ github.event.pull_request.number || github.event.issue.number }}"
+          COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d '{"body": "マスク対応してください"}' $COMMENT_URL
           exit 1
         fi
