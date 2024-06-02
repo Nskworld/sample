@@ -52,7 +52,7 @@ jobs:
         fi
 
     - name: Comment and fail if diff exists and no comments or incomplete mask comments
-      if: (env.comment_exists == 'false' || (env.comment_exists == 'true' && env.mask_complete == '0')) && env.diff_exists == 'true'
+      if: (env.comment_exists == 'false' || (env.comment_exists == 'true' && env.mask_complete == 0)) && env.diff_exists == 'true'
       run: |
         PR_NUMBER="${{ github.event.pull_request.number || github.event.issue.number }}"
         COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
